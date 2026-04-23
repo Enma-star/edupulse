@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% block title %}EduPulse — Formulaire{% endblock %}
+{% block extra_css %}
+<style>
+.form-hero{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%);
+  border-radius:20px;padding:40px 48px;color:white;margin-bottom:32px;
+}
+.form-hero h1{font-family:'Playfair Display',serif;font-size:2rem;font-weight:800;margin-bottom:8px;}
+.form-hero p{color:rgba(255,255,255,0.7);font-size:0.95rem;}
+.progress-steps{display:flex;gap:0;margin-bottom:32px;}
+.step{
+  flex:1;padding:14px 16px;text-align:center;font-size:0.8rem;font-weight:600;
+  background:var(--gray-100);color:var(--gray-500);border-bottom:3px solid var(--gray-200);
+  transition:all 0.3s;cursor:pointer;
+}
+.step.active{background:white;color:var(--navy);border-bottom:3px solid var(--navy);}
+.step.done{background:#f0fdf4;color:var(--green);border-bottom:3px solid var(--green);}
+.step:first-child{border-radius:10px 0 0 0;}
+.step:last-child{border-radius:0 10px 0 0;}
+.form-section{display:none;animation:fadeUp 0.4s ease;}
+.form-section.active{display:block;}
+.section-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--gray-200);
+}
+.section-header-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,var(--navy),var(--blue));
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.section-header h2{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--navy);}
+.form-nav{display:flex;justify-content:space-between;margin-top:28px;padding-top:20px;border-top:1px solid var(--gray-200);}
+.star-group{display:flex;gap:8px;margin-top:6px;}
+.star{font-size:1.6rem;cursor:pointer;transition:transform 0.15s;color:#d1d5db;line-height:1;}
+.star.active{color:var(--accent);}
+.star:hover{transform:scale(1.2);}
+.erreur{
+  background:#fef2f2;border:1px solid #fecaca;color:#991b1b;
+  padding:12px 16px;border-radius:10px;margin-bottom:20px;font-size:0.875rem;
+}
+.form-tip{
+  background:#eff6ff;border-left:3px solid var(--teal);
+  padding:10px 14px;border-radius:0 8px 8px 0;
+  font-size:0.82rem;color:#075985;margin-top:6px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main>
+  <div class="form-hero fade-up">
+    <h1>✏️ Formulaire étudiant</h1>
+    <p>Remplis ce formulaire pour contribuer à l'analyse académique de ta filière.</p>
+  </div>
+
+  {% if erreur %}
+  <div class="erreur">⚠️ {{ erreur }}</div>
+  {% endif %}
+
+  <!-- ÉTAPES -->
+  <div class="progress-steps fade-up-2">
+    <div class="step active" onclick="goTo(0)">① Identité</div>
+    <div class="step" onclick="goTo(1)">② Études</div>
+    <div class="step" onclick="goTo(2)">③ Performance</div>
+    <div class="step" onclick="goTo(3)">④ Satisfaction</div>
+  </div>
+
+  <div class="card fade-up-2">
+    <form method="POST" action="/soumettre" id="mainForm">
+
+      <!-- SECTION 1 : IDENTITÉ -->
+      <div class="form-section active" id="sec-0">
+        <div class="section-header">
+          <div class="section-header-icon">👤</div>
+          <div>
+            <h2>Informations personnelles</h2>
+            <p style="font-size:0.82rem;color:var(--gray-500);">Données générales sur ton profil</p>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nom complet *</label>
+            <input type="text" name="nom" class="form-control" placeholder="Ex: Jean Dupont" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Âge *</label>
+            <input type="number" name="age" class="form-control" min="15" max="60" placeholder="Ex: 21" required/>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Sexe *</label>
+            <select name="sexe" class="form-control" required>
+              <option value="">-- Sélectionner --</option>
+              <option>Masculin</option>
+              <option>Féminin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Niveau d'études *</label>
+            <select name="niveau" class="form-control" required>
+              <option value="">-- Sélectionner --</option>
+              <option>L1</option><option>L2</option><option>L3</option>
+              <option>M1</option><option>M2</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Filière *</label>
+          <select name="filiere" class="form-control" required>
+            <option value="">-- Sélectionner --</option>
+            {% for f in filieres %}
+            <option>{{ f }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-nav">
+          <div></div>
+          <button type="button" class="btn btn-primary" onclick="nextStep(0)">Suivant →</button>
+        </div>
+      </div>
+
+      <!-- SECTION 2 : CONDITIONS D'ÉTUDES -->
+      <div class="form-section" id="sec-1">
+        <div class="section-header">
+          <div class="section-header-icon">💻</div>
+          <div>
+            <h2>Conditions d'études</h2>
+            <p style="font-size:0.82rem;color:var(--gray-500);">Ton environnement d'apprentissage</p>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Accès à Internet *</label>
+            <select name="acces_internet" class="form-control" required>
+              <option value="">-- Sélectionner --</option>
+              <option>Oui</option><option>Parfois</option><option>Non</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Possède un ordinateur *</label>
+            <select name="possede_ordi" class="form-control" required>
+              <option value="">-- Sélectionner --</option>
+              <option>Oui</option><option>Non</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Lieu principal d'étude *</label>
+            <select name="lieu_etude" class="form-control" required>
+              <option value="">-- Sélectionner --</option>
+              <option>Domicile calme</option>
+              <option>Bibliothèque</option>
+              <option>Campus</option>
+              <option>Cybercafé</option>
+              <option>Autre</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Distance domicile-campus *</label>
+            <select name="distance_campus" class="form-control" required>
+              <option value="">-- Sélectionner --</option>
+              <option>Moins de 1 km</option>
+              <option>1 à 5 km</option>
+              <option>5 à 10 km</option>
+              <option>Plus de 10 km</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emploi étudiant *</label>
+          <select name="emploi_etudiant" class="form-control" required>
+            <option value="">-- Sélectionner --</option>
+            <option>Oui, à temps partiel</option>
+            <option>Oui, à temps plein</option>
+            <option>Non</option>
+          </select>
+        </div>
+        <div class="form-nav">
+          <button type="button" class="btn btn-outline" onclick="prevStep(1)">← Précédent</button>
+          <button type="button" class="btn btn-primary" onclick="nextStep(1)">Suivant →</button>
+        </div>
+      </div>
+
+      <!-- SECTION 3 : PERFORMANCE -->
+      <div class="form-section" id="sec-2">
+        <div class="section-header">
+          <div class="section-header-icon">📚</div>
+          <div>
+            <h2>Performance académique</h2>
+            <p style="font-size:0.82rem;color:var(--gray-500);">Tes résultats et tes UEs</p>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Moyenne générale /20 *</label>
+            <input type="number" name="moyenne" class="form-control"
+              min="0" max="20" step="0.01" placeholder="Ex: 13.50" required/>
+            <div class="form-tip">💡 Ta moyenne du dernier semestre</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Matière préférée *</label>
+            <input type="text" name="matiere_preferee" class="form-control"
+              placeholder="Ex: Programmation" required/>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">🟢 UE la plus facile *</label>
+            <select name="ue_facile" class="form-control" required>
+              <option value="">-- Sélectionner --</option>
+              {% for ue in ues %}
+              <option>{{ ue }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🔴 UE la plus difficile *</label>
+            <select name="ue_difficile" class="form-control" required>
+              <option value="">-- Sélectionner --</option>
+              {% for ue in ues %}
+              <option>{{ ue }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-nav">
+          <button type="button" class="btn btn-outline" onclick="prevStep(2)">← Précédent</button>
+          <button type="button" class="btn btn-primary" onclick="nextStep(2)">Suivant →</button>
+        </div>
+      </div>
+
+      <!-- SECTION 4 : SATISFACTION -->
+      <div class="form-section" id="sec-3">
+        <div class="section-header">
+          <div class="section-header-icon">😊</div>
+          <div>
+            <h2>Satisfaction & Ambiance</h2>
+            <p style="font-size:0.82rem;color:var(--gray-500);">Ton ressenti sur la vie académique</p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Satisfaction des cours (1 à 5) *</label>
+          <div class="star-group" id="stars-cours">
+            <span class="star" data-val="1" onclick="setStars('cours',1)">★</span>
+            <span class="star" data-val="2" onclick="setStars('cours',2)">★</span>
+            <span class="star" data-val="3" onclick="setStars('cours',3)">★</span>
+            <span class="star" data-val="4" onclick="setStars('cours',4)">★</span>
+            <span class="star" data-val="5" onclick="setStars('cours',5)">★</span>
+          </div>
+          <input type="hidden" name="satisfaction_cours" id="val-cours" value="0"/>
+          <p style="font-size:0.78rem;color:var(--gray-500);margin-top:6px;">1 = Très insatisfait · 5 = Très satisfait</p>
+        </div>
+        <div class="form-group" style="margin-top:24px;">
+          <label class="form-label">Ambiance de classe (1 à 5) *</label>
+          <div class="star-group" id="stars-ambiance">
+            <span class="star" data-val="1" onclick="setStars('ambiance',1)">★</span>
+            <span class="star" data-val="2" onclick="setStars('ambiance',2)">★</span>
+            <span class="star" data-val="3" onclick="setStars('ambiance',3)">★</span>
+            <span class="star" data-val="4" onclick="setStars('ambiance',4)">★</span>
+            <span class="star" data-val="5" onclick="setStars('ambiance',5)">★</span>
+          </div>
+          <input type="hidden" name="ambiance_classe" id="val-ambiance" value="0"/>
+          <p style="font-size:0.78rem;color:var(--gray-500);margin-top:6px;">1 = Très mauvaise · 5 = Excellente</p>
+        </div>
+        <div class="form-nav" style="margin-top:32px;">
+          <button type="button" class="btn btn-outline" onclick="prevStep(3)">← Précédent</button>
+          <button type="submit" class="btn btn-accent" id="submitBtn">🚀 Soumettre & voir mon profil</button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 0;
+const steps = document.querySelectorAll('.step');
+const sections = document.querySelectorAll('.form-section');
+
+function goTo(i) {
+  sections.forEach(s => s.classList.remove('active'));
+  steps.forEach(s => s.classList.remove('active'));
+  sections[i].classList.add('active');
+  steps[i].classList.add('active');
+  currentStep = i;
+}
+
+function nextStep(i) {
+  const inputs = sections[i].querySelectorAll('[required]');
+  for (let inp of inputs) {
+    if (!inp.value.trim()) {
+      inp.focus();
+      inp.style.borderColor = 'var(--red)';
+      setTimeout(() => inp.style.borderColor = '', 1500);
+      return;
+    }
+  }
+  if (i === 3) {
+    if (!document.getElementById('val-cours').value || document.getElementById('val-cours').value == '0') {
+      alert('Veuillez noter la satisfaction des cours.'); return;
+    }
+    if (!document.getElementById('val-ambiance').value || document.getElementById('val-ambiance').value == '0') {
+      alert('Veuillez noter l\'ambiance de classe.'); return;
+    }
+  }
+  steps[i].classList.remove('active');
+  steps[i].classList.add('done');
+  goTo(i + 1);
+}
+
+function prevStep(i) { goTo(i - 1); }
+
+function setStars(group, val) {
+  const stars = document.querySelectorAll(`#stars-${group} .star`);
+  stars.forEach((s, idx) => {
+    s.classList.toggle('active', idx < val);
+  });
+  document.getElementById(`val-${group}`).value = val;
+}
+
+document.getElementById('submitBtn').addEventListener('click', function(e) {
+  const cours = document.getElementById('val-cours').value;
+  const ambiance = document.getElementById('val-ambiance').value;
+  if (!cours || cours == '0' || !ambiance || ambiance == '0') {
+    e.preventDefault();
+    alert('Veuillez noter la satisfaction et l\'ambiance avant de soumettre.');
+  }
+});
+</script>
+{% endblock %}
