@@ -65,12 +65,30 @@ def profil(eid):
 
 @app.route('/dashboard')
 def dashboard():
-    stats = get_stats_globales()
-    classement = get_classement_filieres()
-    evolution = get_evolution_scores()
-    etudiants = get_all_etudiants()
-    return render_template('dashboard.html', stats=stats, classement=classement,
-                           evolution=evolution, etudiants=etudiants)
+    try:
+        stats = get_stats_globales()
+        classement = get_classement_filieres()
+        evolution = get_evolution_scores()
+        etudiants = get_all_etudiants()
+
+        max_easy = 1
+        max_hard = 1
+
+        if stats and stats.get('top_ue_faciles'):
+            max_easy = max(stats['top_ue_faciles'].values())
+        if stats and stats.get('top_ue_difficiles'):
+            max_hard = max(stats['top_ue_difficiles'].values())
+
+        return render_template('dashboard.html',
+            stats=stats,
+            classement=classement,
+            evolution=evolution,
+            etudiants=etudiants,
+            max_easy=max_easy,
+            max_hard=max_hard
+        )
+    except Exception as e:
+        return f"<h2>Erreur détectée :</h2><pre>{str(e)}</pre>", 500
 
 @app.route('/api/stats')
 def api_stats():
@@ -83,4 +101,3 @@ def api_classement():
 if __name__ == '__main__':
     init_db()
     app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
-    
